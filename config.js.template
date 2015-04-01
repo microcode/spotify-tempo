@@ -1,0 +1,12 @@
+config = {
+    EchoNest: {
+        endpoint: "//developer.echonest.com",
+        api_key: "<API KEY>"
+    },
+
+    Spotify: {
+        client_id: "<CLIENT ID>",
+        client_secret: "<CLIENT SECRET>",
+        redirect_uri: "<REDIRECT URI>"
+    }
+};

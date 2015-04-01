@@ -17,43 +17,48 @@ EchoNest = function (root) {
         },
 
         request: function (request, callback) {
-            var url = "//developer.echonest.com/api/v4" + request.url + "?";
+            request = _.defaults(_.clone(request), {
+                method: EchoNest.Request.GET,
+                paged: false,
+                start: 0,
+                results: 30,
+                query: {},
+                data: {},
+                output: []
+            });
 
-            // TODO: handle paged requests
+            var url = this.options.endpoint + "/api/v4" + request.url;
 
-            var data;
-            switch (request.method) {
-                default: case EchoNest.Request.GET: {
-                    var params = _.compact(_.flatten(_.map(_.extend({
-                        api_key: this.options.api_key
-                    }, request.params), function (value, key) {
-                        if (_.isUndefined(value)) {
-                            return null;
-                        } else if (_.isArray(value)) {
-                            return _.map(value, function (v) {
-                                return { name: key, value: v };
-                            });
-                        } else {
-                            return { name: key, value: value };
-                        }
-                    })));
-
-                    url += $.param(params);
-                } break;
-
-                case EchoNest.Request.POST: {
-                    url += $.param({
-                        api_key: this.options.api_key
-                    });
-
-                    data = new FormData();
-                    _.each(request.params, function (value, key) {
-                        data.append(key, value);
-                    });
-                } break;
+            var query = _.clone(request.query);
+            query["api_key"] = this.options.api_key;
+            if (request.paged) {
+                query["start"] = request.start;
+                query["results"] = request.results;
             }
 
-            console.log("REQUEST", url);
+            var params = _.compact(_.flatten(_.map(query, function (value, key) {
+                if (_.isUndefined(value)) {
+                    return null;
+                } else if (_.isArray(value)) {
+                    return _.map(value, function (v) {
+                        return { name: key, value: v };
+                    });
+                } else {
+                    return { name: key, value: value };
+                }
+            })));
+
+            if (params.length > 0) {
+                url += "?" + $.param(params);
+            }
+
+            var data;
+            if (request.method == EchoNest.Request.POST) {
+                data = new FormData();
+                _.each(request.data, function (value, key) {
+                    data.append(key, value);
+                });
+            }
 
             $.ajax(url, {
                 method: request.method,
@@ -62,31 +67,45 @@ EchoNest = function (root) {
                 cache: false,
                 processData: false
             }).fail(_.bind(function (jqXHR, textStatus, errorThrown) {
-                switch (jqXHR.status) {
-                    case "429": {
-                        var retries = request.hasOwnProperty("_retries") ? request._retries : 0;
-
-                        if (retries >= 2) {
-                            callback(textStatus);
-                            return;
-                        }
-
-                        setTimeout(_.bind(function () {
-                            var _request = _.extend(_.cloneDeep(request), {
-                                _retries: retries + 1
-                            });
-
-                            this.request(_request, callback);
-                        }, this), (retries + 1) * 2500 + Math.random() * 2500);
-                    } break;
-
-                    default: {
-                        callback(textStatus);
-                    } break;
+                if (jqXHR.status != 429) {
+                    callback(textStatus);
+                    return;
                 }
-            }, this)).done(function (data) {
-                callback(null, data);
-            });
+
+                var retries = request.hasOwnProperty("_retries") ? request._retries : 0;
+
+                if (retries >= 2) {
+                    callback(textStatus);
+                    return;
+                }
+
+                setTimeout(_.bind(function () {
+                    var _request = _.extend(_.cloneDeep(request), {
+                        _retries: retries + 1
+                    });
+
+                    this.request(_request, callback);
+                }, this), (retries + 1) * 2500 + Math.random() * 2500);
+            }, this)).done(_.bind(function (data) {
+                if (!request.paged) {
+                    callback(null, data);
+                    return;
+                }
+
+                var page = data.response[request.paged];
+
+                request.output.push.apply(request.output, page.items);
+
+                if (page.start + request.results < page.total) {
+                    var newRequest = _.extend(_.clone(request), {
+                        start: request.start + request.results
+                    });
+
+                    this.request(newRequest, callback);
+                } else {
+                    callback(null, request.output);
+                }
+            }, this));
         }
     });
 
@@ -105,7 +124,7 @@ EchoNest = function (root) {
             this.client.request({
                 method: EchoNest.Request.POST,
                 url: "/tasteprofile/create",
-                params: {
+                data: {
                     name: name,
                     type: type
                 }
@@ -127,7 +146,7 @@ EchoNest = function (root) {
             this.client.request({
                 method: EchoNest.Request.POST,
                 url: "/tasteprofile/delete",
-                params: {
+                data: {
                     id: id
                 }
             }, callback);
@@ -137,7 +156,7 @@ EchoNest = function (root) {
             this.client.request({
                 method: EchoNest.Request.POST,
                 url: "/tasteprofile/update",
-                params: {
+                data: {
                     id: id,
                     data: JSON.stringify(data)
                 }
@@ -153,14 +172,11 @@ EchoNest = function (root) {
 
         status: function (ticket, callback) {
             this.client.request({
-                method: EchoNest.Request.GET,
                 url: "/tasteprofile/status",
-                params: {
+                query: {
                     ticket: ticket
                 }
             }, function (err, data) {
-                console.log("STATUS", err, data);
-
                 if (err) {
                     callback(err);
                     return;
@@ -172,7 +188,6 @@ EchoNest = function (root) {
 
         list: function (callback) {
             this.client.request({
-                method: EchoNest.Request.GET,
                 url: "/tasteprofile/list",
                 paged: true
             }, function (err, data) {
@@ -187,20 +202,21 @@ EchoNest = function (root) {
 
         read: function (id, options, callback) {
             this.client.request({
-                method: EchoNest.Request.GET,
                 url: "/tasteprofile/read",
-                params: {
+                query: {
                     id: id,
                     item_id: options.item_id,
                     bucket: options.buckets
-                }
+                },
+                paged: "catalog",
+                results: 1000
             }, function (err, data) {
-                console.log("READ", err, data);
-
                 if (err) {
                     callback(err);
                     return;
                 }
+
+                callback(null, data);
             });
         }
     });
