@@ -12,8 +12,14 @@ EchoNest = function (root) {
 
     _.extend(EchoNest.prototype, {
         initialize: function (options) {
-            this.options = options;
+            this.options = {
+                endpoint: "//developer.echonest.com"
+            };
             this.TasteProfile = new EchoNest.TasteProfile(this);
+        },
+
+        setup: function (options) {
+            this.options = _.extend(this.options, options);
         },
 
         request: function (request, callback) {
@@ -189,14 +195,14 @@ EchoNest = function (root) {
         list: function (callback) {
             this.client.request({
                 url: "/tasteprofile/list",
-                paged: true
+                paged: "catalogs"
             }, function (err, data) {
                 if (err) {
                     callback(err);
                     return;
                 }
 
-                callback(null, data.response.catalogs);
+                callback(null, data.response);
             });
         },
 

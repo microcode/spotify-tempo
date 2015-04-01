@@ -16,17 +16,21 @@ Spotify = function (root) {
     });
 
     _.extend(Spotify.prototype, {
-        initialize: function (options) {
-            this.options = _.defaults(_.clone(options), {
+        initialize: function () {
+            this.options = {
                 endpoints: {
                     "accounts": "https://accounts.spotify.com",
                     "api": "https://api.spotify.com/v1"
                 }
-            });
+            };
 
             this.Playlists = new Spotify.Playlists(this);
             this.Authorization = new Spotify.Authorization(this);
             this.Profiles = new Spotify.Profiles(this);
+        },
+
+        setup: function (options) {
+            this.options = _.extend(this.options, options);
         },
 
         request: function (request, callback) {
@@ -138,13 +142,6 @@ Spotify = function (root) {
             }, this));
         },
 
-        getParam: function (name) {
-            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-            var results = regex.exec(window.location.search);
-            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-        },
-
         connect: function (callback) {
             var accessToken = this.Authorization.getAccessToken();
             if (accessToken) {
@@ -156,13 +153,6 @@ Spotify = function (root) {
 
                     this.user = profile;
                     callback(null, profile);
-                }, this));
-                return;
-            }
-
-            var code = this.getParam("code");
-            if (code) {
-                this.Authorization.code(code, _.bind(function (err) {
                 }, this));
                 return;
             }
@@ -261,7 +251,12 @@ Spotify = function (root) {
 
     _.extend(Spotify.Authorization.prototype, {
         getAccessToken: function () {
-            return root.localStorage["access_token"];
+            var token = JSON.parse(localStorage.getItem("spotify_token")) || {};
+            if (!token) {
+                return null;
+            }
+
+            return token.access_token;
         },
 
         reset: function () {
@@ -271,6 +266,10 @@ Spotify = function (root) {
 
         authorize: function (scopes) {
             var url = this.client.options.endpoints[Spotify.Endpoint.ACCOUNTS] + "/authorize?";
+
+            if (!this.client.options.client_id) {
+                return;
+            }
 
             url += $.param({
                 client_id: this.client.options.client_id,
@@ -283,6 +282,13 @@ Spotify = function (root) {
         },
 
         code: function (code, callback) {
+            if (!this.client.options.client_id) {
+                async.nextTick(function () {
+                    callback("no client");
+                });
+                return;
+            }
+
             this.client.request({
                 url: "/api/token",
                 endpoint: Spotify.Endpoint.ACCOUNTS,
@@ -303,16 +309,16 @@ Spotify = function (root) {
                     return;
                 }
 
-                root.localStorage["access_token"] = data.access_token;
-                root.localStorage["refresh_token"] = data.refresh_token;
+                localStorage.setItem("spotify_token", JSON.stringify(data));
 
                 callback(null);
             });
         },
 
         refresh: function (callback) {
-            var refreshToken = root.localStorage["refresh_token"];
-            if (!refreshToken) {
+            var token = JSON.parse(localStorage.getItem("spotify_token")) || {};
+
+            if (!token.hasOwnProperty("refresh_token")) {
                 async.nextTick(function () {
                     callback("refresh_token");
                 });
@@ -330,7 +336,7 @@ Spotify = function (root) {
                     client_secret: this.client.options.client_secret,
 
                     grant_type: "refresh_token",
-                    refresh_token: refreshToken
+                    refresh_token: token.refresh_token
                 }
             }, function (err, data) {
                 if (err) {
@@ -339,7 +345,10 @@ Spotify = function (root) {
                     return;
                 }
 
-                root.localStorage["access_token"] = data.access_token;
+                localStorage.setItem("spotify_token", JSON.stringify(_.extend(token, {
+                    access_token: data.access_token
+                })));
+
                 callback(null);
             });
         }

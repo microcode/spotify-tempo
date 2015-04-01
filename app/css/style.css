@@ -1,0 +1,9 @@
+body {
+    background-color: #345;
+    color: white;
+}
+
+div.well {
+    background: #234;
+    border-color: #123;
+}

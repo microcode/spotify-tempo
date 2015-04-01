@@ -1,6 +1,6 @@
-RootView = SpotifyTempo.View.extend({
+HeaderView = SpotifyTempo.View.extend({
     initialize: function () {
-        this.template = Template.get("root");
+        this.template = Template.get("header");
     },
 
     render: function () {
