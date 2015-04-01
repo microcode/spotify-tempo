@@ -168,6 +168,11 @@ Spotify = function (root) {
             }
 
             callback(null, null);
+        },
+
+        disconnect: function () {
+            this.Authorization.reset();
+            delete this.user;
         }
     });
 
