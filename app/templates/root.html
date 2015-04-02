@@ -1,0 +1,20 @@
+<%
+
+switch (this.isReady()) {
+    case false: { %>
+<div class="text-center">Initializing...</div>
+<%  } break;
+    case 'spotify': { %>
+<div>Spotify has not yet been initialized. Click <a href="#spotify">here</a> to complete setup.</div>
+<%  } break;
+    case 'echonest': { %>
+<div>EchoNest has not yet been configured. Click <a href="#echonest">here</a> to complete setup.</div>
+<%  } break;
+} %>
+<div class="row" style="height: 100%">
+    <div class="col-xs-3 well" id="playlists">PLAYLISTS</div>
+    <div class="col-xs-9" id="tracks">
+        <div class="row well" id="tracks-inner">TRACKS</div>
+        <div class="row well" id="player">PLAYER</div>
+    </div>
+</div>

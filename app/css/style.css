@@ -1,9 +1,67 @@
+html, body {
+    height: 100%;
+}
 body {
     background-color: #345;
     color: white;
 }
 
-div.well {
+.well {
     background: #234;
     border-color: #123;
+    margin-bottom: 0;
+}
+
+#body {
+    height: 80%;
+}
+
+#root {
+    height: 100%;
+}
+
+#playlists {
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#tracks {
+    height: 100%;
+}
+
+#tracks-inner {
+    height: 80%;
+}
+
+#tracks-inner > div {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#player {
+    height: 20%;
+}
+
+a {
+    color: gray;
+}
+
+a:hover {
+    color: white;
+    text-decoration: none;
+}
+
+a:visited {
+    color: gray;
+    text-decoration: none;
+}
+
+a:visited:hover {
+    color: white;
+}
+
+#range-outer {
+    padding-top: 20px;
 }

@@ -13,7 +13,7 @@ EchoNest = function (root) {
     _.extend(EchoNest.prototype, {
         initialize: function (options) {
             this.options = {
-                endpoint: "//developer.echonest.com"
+                endpoint: "https://developer.echonest.com/api"
             };
             this.TasteProfile = new EchoNest.TasteProfile(this);
         },
@@ -33,7 +33,7 @@ EchoNest = function (root) {
                 output: []
             });
 
-            var url = this.options.endpoint + "/api/v4" + request.url;
+            var url = this.options.endpoint + "/v4" + request.url;
 
             var query = _.clone(request.query);
             query["api_key"] = this.options.api_key;

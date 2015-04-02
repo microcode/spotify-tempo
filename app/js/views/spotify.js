@@ -17,7 +17,8 @@ SpotifySettingsView = SpotifyTempo.View.extend({
 
             client.setup(this.settings);
             client.Authorization.code(code, _.bind(function (err) {
-                location.search = "";
+                console.log(err);
+                //location.search = "";
             }, this));
         }
     },

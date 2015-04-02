@@ -40,5 +40,22 @@ SpotifyTempo.Router = Backbone.Router.extend({
             $(anchor).html(view.render().el);
             this._activeView = view;
         }
+    },
+
+    isViewType: function (type) {
+        do {
+            var view = this._activeView;
+            if (!view) {
+                break;
+            }
+
+            return type == view.constructor;
+        } while (0);
+
+        return false;
+    },
+
+    getCurrentView: function () {
+        return this._activeView;
     }
 });

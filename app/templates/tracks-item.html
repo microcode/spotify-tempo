@@ -1,0 +1,4 @@
+<td><%= _.map(track.artists, function (artist) { return artist.name; }).join(', ') %></td>
+<td><%= track.name %></td>
+<td><%= this.toTime(track.duration_ms) %></td>
+<td><%= this.hasOwnProperty("bpm") ? this.bpm : '' %></td>
