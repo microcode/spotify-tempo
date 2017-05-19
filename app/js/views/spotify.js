@@ -11,15 +11,12 @@ SpotifySettingsView = SpotifyTempo.View.extend({
             redirect_uri: ""
         });
 
-        var code = this.getParam("code");
-        if (code && this.settings.client_id) {
+        var access_token = this.getParam("access_token");
+        if (access_token && this.settings.client_id) {
             var client = new Spotify();
 
             client.setup(this.settings);
-            client.Authorization.code(code, _.bind(function (err) {
-                console.log(err);
-                //location.search = "";
-            }, this));
+            client.setAccessToken(access_token);
         }
     },
 

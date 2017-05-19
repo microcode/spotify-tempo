@@ -66,8 +66,15 @@ TracksView = SpotifyTempo.View.extend({
 
     showRange: function (min, max) {
         console.log("showRange", min, max);
-        _.each(this.getChildViews(), function (view) {
-            view.$el.toggle(view.bpm >= min && view.bpm <= max);
+        var visibleTracks = _.chain(this.getChildViews()).map(function (view) {
+            var visible = view.bpm >= min && view.bpm <= max;
+            view.$el.toggle(visible);
+
+            return visible ? view.model.get('track').id : null;
+        }).compact().value();
+
+        _.each(visibleTracks, function (track) {
+            console.log("spotify:track:"+track);
         });
     },
 

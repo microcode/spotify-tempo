@@ -27,10 +27,17 @@ Spotify = function (root) {
             this.Playlists = new Spotify.Playlists(this);
             this.Authorization = new Spotify.Authorization(this);
             this.Profiles = new Spotify.Profiles(this);
+            this.Tracks = new Spotify.Tracks(this);
         },
 
         setup: function (options) {
             this.options = _.extend(this.options, options);
+        },
+
+        setAccessToken: function (token) {
+            localStorage.setItem("spotify_token", JSON.stringify({
+                access_token: token
+            }));
         },
 
         request: function (request, callback) {
@@ -55,9 +62,13 @@ Spotify = function (root) {
                 if (_.isUndefined(value)) {
                     return null;
                 } else if (_.isArray(value)) {
-                    return _.map(value, function (v) {
-                        return { name: key, value: v };
-                    });
+                    if (!!request.commas) {
+                        return { name: key, value: value };
+                    } else {
+                        return _.map(value, function (v) {
+                            return { name: key, value: v };
+                        });
+                    }
                 } else {
                     return { name: key, value: value };
                 }
@@ -245,6 +256,24 @@ Spotify = function (root) {
         }
     });
 
+    Spotify.Tracks = function (client) {
+        this.client = client;
+    };
+
+    _.extend(Spotify.Tracks.prototype, {
+        audioFeatures: function (ids, callback) {
+            this.client.request({
+                url: "/audio-features",
+                query: {
+                    ids: ids
+                },
+                commas: true
+            }, function (err, features) {
+                callback(err, features);
+            });
+        }
+    });
+
     Spotify.Authorization = function (client) {
         this.client = client;
     };
@@ -273,7 +302,7 @@ Spotify = function (root) {
 
             url += $.param({
                 client_id: this.client.options.client_id,
-                response_type: "code",
+                response_type: "token",
                 redirect_uri: this.client.options.redirect_uri,
                 scope: scopes.join(" ")
             });

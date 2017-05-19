@@ -6,7 +6,6 @@ var AppRouter = SpotifyTempo.Router.extend({
 
     routes: {
         "": "showRoot",
-        "echonest": "showEchoNestSettings",
         "spotify": "showSpotifySettings",
         "playlists/:owner/:playlist": "showPlaylist"
     },
@@ -30,10 +29,6 @@ var AppRouter = SpotifyTempo.Router.extend({
         }
 
         this.showView("#body", new RootView({ playlist: playlist }));
-    },
-
-    showEchoNestSettings: function () {
-        this.showView("#body", new EchoNestSettingsView());
     },
 
     showSpotifySettings: function () {

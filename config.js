@@ -3,7 +3,6 @@ config = {
         'root',
         'header',
         'spotify',
-        'echonest',
         'playlist',
         'playlist-item',
         'tracks',

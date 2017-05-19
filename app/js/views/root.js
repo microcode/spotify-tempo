@@ -11,7 +11,6 @@ RootView = SpotifyTempo.View.extend({
         this.active = true;
         async.parallel([
             _.bind(this.createSpotify, this),
-            _.bind(this.createEchoNest, this)
         ], _.bind(this.create, this))
     },
 
@@ -29,7 +28,7 @@ RootView = SpotifyTempo.View.extend({
 
         if (this.isReady())
         {
-            this.bpm = new BpmCache({ echonest: this.echonest });
+            this.bpm = new BpmCache({ spotify: this.spotify });
 
             this.player = new PlayerView();
             this.addChildView(this.player);
@@ -39,7 +38,7 @@ RootView = SpotifyTempo.View.extend({
             this.addChildView(this.playlists);
             this.$el.find("#playlists").html(this.playlists.render().el);
 
-            this.tracks = new TracksView({ spotify: this.spotify, echonest: this.echonest, playlist: this.playlist, player: this.player, bpm: this.bpm });
+            this.tracks = new TracksView({ spotify: this.spotify, playlist: this.playlist, player: this.player, bpm: this.bpm });
             this.addChildView(this.tracks);
             this.$el.find("#tracks-inner").html(this.tracks.render().el);
 
@@ -71,22 +70,6 @@ RootView = SpotifyTempo.View.extend({
         }, this));
     },
 
-    createEchoNest: function (callback) {
-        var config = JSON.parse(localStorage.getItem("echonest_settings"));
-        if (!config) {
-            async.nextTick(callback);
-            return;
-        }
-
-        var echonest = new EchoNest();
-        echonest.setup(config);
-
-        async.nextTick(_.bind(function () {
-            this.echonest = echonest;
-            callback(null);
-        }, this));
-    },
-
     isReady: function () {
         if (!this._ready) {
             return false;
@@ -94,10 +77,6 @@ RootView = SpotifyTempo.View.extend({
 
         if (!this.spotify) {
             return "spotify";
-        }
-
-        if (!this.echonest) {
-            return "echonest";
         }
 
         return true;

@@ -8,14 +8,15 @@
 <script>
 function getParam(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-    var results = regex.exec(window.location.search);
+    var regex = new RegExp(name + "=([^&#]*)");
+    var results = regex.exec(window.location.hash.substr(1));
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-var code = getParam("code");
+var code = getParam("access_token");
 if (code) {
-    window.location.replace("../?code=" + encodeURIComponent(code) + "#spotify");
+    console.log(code);
+    window.location.replace("../?access_token=" + encodeURIComponent(code) + "#spotify");
 }
 </script>
 </body>
